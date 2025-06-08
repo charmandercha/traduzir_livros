@@ -1,0 +1,14 @@
+[project]
+name = "traduzir-livros"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gradio",          # Para 'import gradio'
+    "ebooklib",        # Para 'import ebooklib'
+    "beautifulsoup4",  # Para 'from bs4 import ...'
+    "openai",          # Para 'from openai import OpenAI'
+    "langdetect",      # Para 'from langdetect import ...'
+    "python-magic",    # Para 'import magic'
+]
