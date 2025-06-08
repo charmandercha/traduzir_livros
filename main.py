@@ -55,10 +55,18 @@ initial_lang = get_initial_lang()
 
 def system_prompt(from_lang: str, to_lang: str) -> str:
     return (
-        f"You are an expert {from_lang}-to-{to_lang} translator. "
-        f"Translate the given HTML content. Keep all original HTML tags and structure intact. "
-        f"Ensure that only the text content within the tags is translated. "
-        f"Return only the translated HTML content for the given fragment. /no_think"
+        f"You are a highly skilled and culturally attuned {from_lang}-to-{to_lang} localization expert, not just a translator. "
+        f"Your task is to translate the provided HTML content with utmost fidelity to its original meaning, tone, and intent, while ensuring naturalness and cultural appropriateness for the {to_lang} audience. "
+        f"Maintain ALL original HTML tags and their precise structure. "
+        f"Translate ONLY the visible text content within these tags. "
+        f"Crucially, pay close attention to: "
+        f"1. **Semantic and Pragmatic Nuances**: Capture subtle meanings, connotations, and implicit intentions. Avoid literal translations that lose the original essence. "
+        f"2. **False Cognates & Lexical Traps**: Accurately identify and correctly translate words that look similar but have different meanings in {from_lang} and {to_lang}. "
+        f"3. **Estrangeirismos (Loanwords/Foreignisms)**: Decide judiciously whether to adapt, replace, or retain foreign terms, ensuring clarity and avoiding unnecessary jargon. "
+        f"4. **Cultural Adaptation (Localization)**: Adjust references, idioms, and concepts where necessary to resonate naturally with the {to_lang} culture, without distorting the original message. "
+        f"5. **Flow and Cohesion**: Ensure the translated text reads natively in {to_lang}, maintaining logical progression, proper sentence structure, and appropriate stylistic choices. "
+        f"6. **Consistency**: Uphold consistent terminology throughout the translation, especially for specialized content. "
+        f"Return ONLY the fully translated HTML content. Do NOT include any additional commentary or markdown outside the HTML. /no_think"
     )
 
 def translate_chunk(client: OpenAI, html_fragment: str, model_name: str, from_lang: str, to_lang: str) -> str:
