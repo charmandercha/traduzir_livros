@@ -10,6 +10,8 @@ from langdetect import detect, DetectorFactory
 from typing import List, Tuple, Optional, Dict, Any
 import magic # python-magic
 import traceback # Para logging de erros detalhado
+import locale
+from translations import translations
 
 # Para garantir resultados consistentes da langdetect
 DetectorFactory.seed = 0
@@ -36,6 +38,20 @@ COMMON_LANGUAGES = [
 ]
 
 # --- Lógica Principal de Tradução (Sem alterações) ---
+
+# 👇 ADICIONADO: Função para determinar o idioma inicial
+def get_initial_lang():
+    """Detecta o idioma do sistema ou usa 'en' como padrão."""
+    try:
+        system_lang = locale.getlocale()[0] or "en_US"
+        if system_lang:
+            lang_code = system_lang.split('_')[0]
+            if lang_code in translations:
+                return lang_code
+    except Exception:
+        pass
+    return 'en'
+initial_lang = get_initial_lang()
 
 def system_prompt(from_lang: str, to_lang: str) -> str:
     return (
@@ -196,7 +212,7 @@ def parse_epub_metadata_and_chapters(epub_file_obj: Optional[tempfile._Temporary
     if epub_file_obj is None:
         print("PARSE_EPUB_METADATA: Upload limpo. Resetando campos da UI.")
         return (
-            gr.update(choices=[], value=[], label="Chapters to Translate", interactive=False),
+            gr.update(choices=[], value=[], label=t['chapters_selector_label'], interactive=False),
             gr.update(value="auto"),
             gr.update(value="PT-BR"),
             gr.update(value=""),
@@ -370,44 +386,84 @@ css = """
 .detalhes .form{ border: none; }
 .BookDetails{ padding: 0; }
 .meuBloco{ border-radius: 10px; }
+.px-0{padding: 0;}
 """
 
 with gr.Blocks(theme='earneleh/paris', css=css) as app:
-    gr.Markdown("## 📖 EPUB Translator with Ollama")
-    gr.Markdown("Upload an EPUB, select model, languages, and chapters, then translate using a local Ollama model.")
+    t = translations[initial_lang]
+    gr.Markdown(t['app_title'])
+    gr.Markdown(t['app_subtitle'])
 
     # NOVO: Estado centralizado para armazenar os dados do livro.
     book_data_state = gr.State({})
 
     with gr.Row():
         with gr.Column(scale=3, elem_classes=['newBg']):
-            gr.Markdown("### 1. Upload & Configure EPUB")
-            epub_upload_btn = gr.UploadButton("Click to Upload EPUB", file_types=[".epub"], type="filepath")
+            gr.Markdown(t['section_1_title'])
+            epub_upload_btn = gr.UploadButton(t['upload_button_text'], file_types=[".epub"], type="filepath")
 
-            gr.Markdown("### 2. Translation Settings")
-            model_name_input = gr.Textbox(label="Ollama Model Name", placeholder="e.g., llama3, mistral", value=DEFAULT_MODEL, elem_classes="meuBloco")
+            gr.Markdown(t['section_2_title'])
+            model_name_input = gr.Textbox(
+                label=t['model_name_label'], 
+                placeholder=t['model_name_placeholder'], 
+                value=DEFAULT_MODEL, 
+                elem_classes="meuBloco"
+            )
 
             with gr.Row(elem_classes="small_gap meuBloco"):
-                lang_from_dropdown = gr.Dropdown(label="From Language", choices=COMMON_LANGUAGES, value="auto", elem_classes="meuBloco title me-1")
-                lang_to_dropdown = gr.Dropdown(label="To Language", choices=[(n, c) for n, c in COMMON_LANGUAGES if c != "auto"], value="PT-BR", elem_classes="meuBloco ms-1")
+                lang_from_dropdown = gr.Dropdown(
+                    label=t['from_language_label'], 
+                    choices=COMMON_LANGUAGES, 
+                    value="auto", 
+                    elem_classes="meuBloco title me-1"
+                )
+                lang_to_dropdown = gr.Dropdown(
+                    label=t['to_language_label'], 
+                    choices=[(n, c) for n, c in COMMON_LANGUAGES if c != "auto"], 
+                    value="PT-BR", 
+                    elem_classes="meuBloco ms-1"
+                )
 
-            with gr.Accordion(label="Choose chapters to translate (default = all)", elem_classes="meuBloco detalhes", open=False):
+            with gr.Accordion(label=t['chapters_accordion_label'], elem_classes="meuBloco detalhes", open=False):
                 with gr.Row():
                     with gr.Column(scale=8, elem_classes=['newBg']):
-                        gr.Markdown("### 3. Select Chapters for Translation")
+                        gr.Markdown(t['section_3_title'])
                     with gr.Column(scale=3, elem_classes=['newBg']):
-                        toggle_chapters_btn = gr.Button("Deselect All Chapters")
-                chapters_selector = gr.CheckboxGroup(label="Chapters to Translate", choices=[], value=[], interactive=False, elem_classes="meuBloco")
+                        # O texto deste botão provavelmente mudará dinamicamente (Select/Deselect All)
+                        # mas este é o valor inicial.
+                        toggle_chapters_btn = gr.Button(t['deselect_all_btn'])
+                chapters_selector = gr.CheckboxGroup(
+                    label=t['chapters_selector_label'], 
+                    choices=[], 
+                    value=[], 
+                    interactive=False, 
+                    elem_classes="meuBloco px-0"
+                )
 
-            with gr.Accordion(label="Details about the book", elem_classes="meuBloco detalhes", open=False):
-                epub_title_display = gr.Textbox(label="Book Title", elem_classes="BookDetails", interactive=False, lines=1)
-                epub_author_display = gr.Textbox(label="Book Author", elem_classes="BookDetails", interactive=False, lines=1)
-                chapter_count_display = gr.Textbox(label="EPUB Structure Info", elem_classes="BookDetails", interactive=False, lines=1)
+            with gr.Accordion(label=t['details_accordion_label'], elem_classes="meuBloco detalhes", open=False):
+                epub_title_display = gr.Textbox(
+                    label=t['book_title_label'], 
+                    elem_classes="BookDetails", 
+                    interactive=True, 
+                    lines=1
+                )
+                epub_author_display = gr.Textbox(
+                    label=t['book_author_label'], 
+                    elem_classes="BookDetails", 
+                    interactive=True, 
+                    lines=1
+                )
+                chapter_count_display = gr.Textbox(
+                    label=t['epub_structure_info_label'], 
+                    elem_classes="BookDetails", 
+                    interactive=True, 
+                    lines=1
+                )
 
-            gr.Markdown("### 4. Translate & Download")
-            submit_btn = gr.Button("🌍 Translate Selected Chapters", variant="primary", scale=2)
+            gr.Markdown(t['section_4_title'])
+            submit_btn = gr.Button(t['translate_button_text'], variant="primary", scale=2)
             progress_bar = gr.Progress()
-            output_file_display = gr.File(label="Download Translated EPUB", interactive=False)
+            output_file_display = gr.File(label=t['download_label'], interactive=False)
 
     # --- Eventos Gradio (Com Alterações) ---
 
@@ -440,14 +496,14 @@ with gr.Blocks(theme='earneleh/paris', css=css) as app:
 
         all_chapter_indices = [choice[1] for choice in book_data["chapter_choices_for_ui"]]
         if not all_chapter_indices:
-            return gr.update(), gr.update(value="No Chapters Found")
+            return gr.update(), gr.update(value=t['no_chapters_found'])
 
         if len(current_selection) < len(all_chapter_indices):
             # Se nem todos estiverem selecionados, seleciona todos
-            return gr.update(value=all_chapter_indices), gr.update(value="Deselect All Chapters")
+            return gr.update(value=all_chapter_indices), gr.update(value=t['deselect_all_btn'])
         else:
             # Se todos estiverem selecionados, deseleciona todos
-            return gr.update(value=[]), gr.update(value="Select All Chapters")
+            return gr.update(value=[]), gr.update(value=t['deselect_all_btn'])
 
     # NOVO: Evento de clique do botão de toggle que passa o estado como entrada
     toggle_chapters_btn.click(
