@@ -395,6 +395,15 @@ css = """
 .BookDetails{ padding: 0; }
 .meuBloco{ border-radius: 10px; }
 .px-0{padding: 0;}
+.sendBook{
+  background: rgb(16, 162, 114);
+  border-radius: 32px;
+  text-transform: uppercase;
+}
+.translateButton{
+    background: rgb(185, 63, 15);
+    text-transform: uppercase;
+}
 """
 
 with gr.Blocks(theme='earneleh/paris', css=css) as app:
@@ -408,7 +417,7 @@ with gr.Blocks(theme='earneleh/paris', css=css) as app:
     with gr.Row():
         with gr.Column(scale=3, elem_classes=['newBg']):
             gr.Markdown(t['section_1_title'])
-            epub_upload_btn = gr.UploadButton(t['upload_button_text'], file_types=[".epub"], type="filepath")
+            epub_upload_btn = gr.UploadButton(t['upload_button_text'], file_types=[".epub"], type="filepath", elem_classes='sendBook')
 
             gr.Markdown(t['section_2_title'])
             model_name_input = gr.Textbox(
@@ -469,7 +478,7 @@ with gr.Blocks(theme='earneleh/paris', css=css) as app:
                 )
 
             gr.Markdown(t['section_4_title'])
-            submit_btn = gr.Button(t['translate_button_text'], variant="primary", scale=2)
+            submit_btn = gr.Button(t['translate_button_text'], variant="primary", scale=2, elem_classes='translateButton')
             progress_bar = gr.Progress()
             output_file_display = gr.File(label=t['download_label'], interactive=False)
 
