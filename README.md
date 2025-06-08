@@ -1,5 +1,5 @@
 Tradutor de Livros EPUB com IA Local
-
+![Printscreen do Projeto](printscreen.png)
 ![alt text](https://img.shields.io/badge/license-Unlicense-blue.svg)
 
 Este é um projeto de código aberto que utiliza o poder de Grandes Modelos de Linguagem (LLMs) rodando localmente através do Ollama para traduzir livros no formato EPUB.
